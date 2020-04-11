@@ -31,6 +31,46 @@ plotByTime<-function(countyInput,stateInput){
     dTemp<-filter(d0,state==stateInput)
     dTemp$date<-sub("-","/",dTemp$date)
     dTemp$date<-sub("0","",dTemp$date)
+    if (nrow(dTemp)==0){
+      print("That's not a state")
+      stop()
+    }
+      
+    dTemp <- dTemp %>%
+      group_by(date)%>%
+      summarize(deaths=sum(deaths),
+                cases=sum(cases)) %>% 
+      pivot_longer(cols=c(deaths,cases), names_to="type", values_to="vals")
+    dTemp<-dTemp[(nrow(dTemp)/2):nrow(dTemp),]
+    ggplot(dTemp,aes(x=factor(date),y=vals,col=as.factor(type)))+
+      geom_point(
+        size=1.75
+      )+ylim(0,(max(dTemp$vals)+3000))+ylab("")+xlab("Date")+ggtitle(paste(c(stateInput," cases and deaths")))
+    #print('oneCond')
+    #THis is there's an error somewhere
+  }else if(missing(countyInput) && missing(stateInput)){
+    dTemp=d0
+    dTemp$date<-sub("-","/",dTemp$date)
+    dTemp$date<-sub("0","",dTemp$date)
+    dTemp <- dTemp %>%
+      group_by(date)%>%
+      summarize(deaths=sum(deaths),
+                cases=sum(cases)) %>% 
+      pivot_longer(cols=c(deaths,cases), names_to="type", values_to="vals")
+    dTemp<-dTemp[(nrow(dTemp)/2):nrow(dTemp),]
+    ggplot(dTemp,aes(x=factor(date),y=vals,col=as.factor(type)))+
+      geom_point(
+        size=1.75
+      )+ylim(0,(max(dTemp$vals)+3000))+ylab("")+xlab("Date")+ggtitle("US cases and deaths")
+  }else{
+    #This is for when there's a county and state
+    dTemp<-filter(d0,state==stateInput, county==countyInput)
+    dTemp$date<-sub("-","/",dTemp$date)
+    dTemp$date<-sub("0","",dTemp$date)
+    if (nrow(dTemp)==0){
+      print("Typo somewhere")
+      stop()
+    }
     
     dTemp <- dTemp %>%
       group_by(date)%>%
@@ -41,13 +81,13 @@ plotByTime<-function(countyInput,stateInput){
     ggplot(dTemp,aes(x=factor(date),y=vals,col=as.factor(type)))+
       geom_point(
         size=1.75
-      )+ylim(0,(max(dTemp$vals)+3000))+ylab("")+xlab("Date")
-    #print('oneCond')
-    #THis is there's an error somewhere
-  }else if(missing(countyInput) && missing(stateInput)){
-    print("need to enter 'state' or 'county'")
-    stop()
-  }else{
-    #print('ThreeCond')
+      )+ylim(0,(max(dTemp$vals)+3000))+ylab("")+xlab("Date")+ggtitle(paste(countyInput,stateInput))
   }
 }
+
+plotByTime()
+
+plotByTime(stateInput="Rhode Island")
+plotByTime(countyInput="Norfolk",stateInput="Massachusetts")
+
+plotByTime(countyInput="Providence",stateInput="Rhode Island")
